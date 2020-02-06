@@ -21,25 +21,53 @@ file = open(config_file_path, 'r')
 config = yaml.load(file, Loader=yaml.SafeLoader)
 file.close()
 
+if not 'series' in config:
+    old_config = config
+    # Upgrade to new config style
+    config = {'series':old_config,
+              'defaults': {
+                'preferred bot': '',
+                'search engine': 'horriblesubs',
+                'download folder': '',
+                } }
+    # Save updated config
+    file = open(config_file_path, 'w')
+    yaml.dump(config, file)
+    file.close()
+
+# Get defaults
+default_preferred_bot = config['defaults']['preferred bot']
+default_download_folder = config['defaults']['download folder']
+default_search_engine = config['defaults']['search engine']
+
 # Process each entry
-for series in config.keys():
+series_dict = config['series']
+for series in series_dict.keys():
     if series.startswith('skip-'):
         # Skip this series
         continue
         
-    data = config[series]
+    data = series_dict[series]
     
     try:
+        print("Processing {}...".format(series))
+        
         search_string = data['search string']
         
-        if data['search engine'].lower() == 'nibl':
+        search_engine_name = data.get('search engine', default_search_engine)
+        
+        if search_engine_name.lower() == 'nibl':
             search_engine = SearchEngines.NIBL
-        elif data['search engine'].lower() == 'ixirc':
+        elif search_engine_name.lower() == 'ixirc':
             search_engine = SearchEngines.IXIRC
+        elif search_engine_name.lower() == 'horriblesubs':
+            search_engine = SearchEngines.HORRIBLESUBS
         else:
+            print("Unrecognized search engine: {} - using horriblesubs".format(search_engine_name))
             search_engine = SearchEngines.HORRIBLESUBS
             
-        preferred_bot = data.get('preferred bot','')
+        preferred_bot = data.get('preferred bot',default_preferred_bot)
+        download_folder = data.get('download folder', default_download_folder)
             
         while True:
             search_results = search_engine.value.search(data['search string'].format(data['last episode downloaded'] + 1))         
@@ -53,7 +81,9 @@ for series in config.keys():
                         
                 output_name = ''
                 try:
-                    result.set_directory(data['download folder'])
+                    if download_folder != '':
+                        result.set_directory(download_folder)
+                        
                     client = XDCCClient(
                         result,
                         timeout=120,
