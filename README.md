@@ -53,3 +53,17 @@ There is an additional optional configuration line for each series:
 `preferred bot: bot of choice`
 
 If preferred bot is not set, the first bot in the search result will be used.
+
+# Skipping (download pause) series
+
+If the name of the series starts with "skip-" it will be skipped during the download process.
+This feature can be used to pause downloading of a series without removing it from the YAML file.
+
+E.g.:
+```
+skip-magi:
+  download folder: d:/Downloads
+  last episode downloaded: 0
+  search engine: horriblesubs
+  search string: '[HorribleSubs] Magi - {:02} [1080p]'
+```

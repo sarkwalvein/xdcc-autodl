@@ -23,6 +23,10 @@ file.close()
 
 # Process each entry
 for series in config.keys():
+    if series.startswith('skip-'):
+        # Skip this series
+        continue
+        
     data = config[series]
     
     try:
