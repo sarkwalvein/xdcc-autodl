@@ -2,10 +2,17 @@ import os
 import sys
 import yaml
 import re
+import argparse
 #from xdcc_dl.xdcc import download_packs
 from xdcc_dl.xdcc.XDCCClient import XDCCClient
 from xdcc_dl.pack_search import SearchEngines
 
+def get_arg_parser():
+    parser = argparse.ArgumentParser(description='XDCC Series Autodownloader')
+    parser.add_argument('-v', '--verbose', help='Output additional process details', action='store_true')
+    parser.add_argument('-s', '--series', help='YAML file with series configuration')
+    return parser
+    
 def prepare_re_string(search_string):
     search_string = search_string.replace('\\',r'\\' )
     search_string = search_string.replace('|',r'\|')
@@ -27,12 +34,21 @@ def prepare_re_string(search_string):
 binary_path = sys.argv[0]
 binary_folder = os.path.split(binary_path)[0]
 
-print(binary_path)
+parser = get_arg_parser()
+args = parser.parse_args()
 
-if len(sys.argv) > 2:
-    config_file_path = sys.argv[1]
-else:
+if args.series is None:
     config_file_path = os.path.join(binary_folder, "series.yaml")
+else:
+    config_file_path = args.series
+    
+if args.verbose is None:
+    verbose_flag = False
+else:
+    verbose_flag = True
+    
+print("Processing configuration file: " + config_file_path)
+print("Verbose output: " + str(verbose_flag))    
     
 # Parse configuration file
 file = open(config_file_path, 'r')
@@ -89,20 +105,30 @@ for series in series_dict.keys():
         download_folder = data.get('download folder', default_download_folder)
         episode_limit = data.get('episode download limit per execution', default_episode_limit)
         episode_download_count = 0
+        
+        if not os.path.isdir(download_folder):
+            print("Creating folder " + download_folder)
+            os.mkdir(download_folder)
+            
+        if 'last episode downloaded' is not in data:
+            data[''last episode downloaded'] = 0
             
         while episode_download_count < episode_limit:
             current_search_string_with_wildcard = data['search string'].format(data['last episode downloaded'] + 1)
             current_search_string = current_search_string_with_wildcard.replace('*',' ')
-            current_search_string_regex = re.compile(prepare_re_string(current_search_string_with_wildcard))
+            current_search_string_regex = re.compile(prepare_re_string(current_search_string_with_wildcard), re.IGNORECASE)
             
-            print("Searching {} for {}: ".format(search_engine_name, current_search_string))
+            if verbose_flag: print("Searching {} for {}: ".format(search_engine_name, current_search_string))
+            
             search_results = search_engine.value.search(current_search_string)         
             
             selected_pack = None
             
             if len(search_results) > 0:
                 for result in search_results:
+                    if verbose_flag: print("Applying {} on {}".format(prepare_re_string(current_search_string_with_wildcard), result.get_filename()))
                     if current_search_string_regex.search(result.get_filename()) is not None:
+                        if verbose_flag: print("Match")
                         selected_pack = result
                         if result.get_bot() == preferred_bot:
                             break
@@ -113,7 +139,7 @@ for series in series_dict.keys():
                         if download_folder != '':
                             selected_pack.set_directory(download_folder)
                             
-                        print("Downloading {} into {}".format(str(selected_pack), selected_pack.directory))
+                        if verbose_flag: print("Downloading {} into {}".format(str(selected_pack), selected_pack.directory))
                             
                         client = XDCCClient(
                             selected_pack,

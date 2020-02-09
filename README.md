@@ -4,7 +4,18 @@ This software downloads new episode from the series described in the configurati
 
 # Execution
 
-`xdcc-series-autodl [configuration file]`
+```
+usage: xdcc-series-autodl.py [-h] [-v VERBOSE] [-s SERIES]
+
+XDCC Series Autodownloader
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v VERBOSE, --verbose VERBOSE
+                        Output additional process details
+  -s SERIES, --series SERIES
+                        YAML file with series configuration
+```
 
 If the software is run without parameters it will process the `series.yaml` file present
 in the same folder as the application.
@@ -12,33 +23,37 @@ in the same folder as the application.
 # Configuration file format
 
 The configuration file is in YAML format and can be edited with any text editor.
+The configuration file is composed by two sections: defaults, and series.
 
-Each series must contain a four (or five) lines entry in the configuration file with the following format:
+## Defaults section
+
+The default sections contain configuration for some parameters that are applied to the series to download
+in case these parameters are not overriden for the specific series:
+
+The following parametrers can be configured in the defaults section:
 
 ```
-name of the series:
-  download folder: c:/path/to/your/folder
-  last episode downloaded: 0
-  search engine: engine of choice
-  search string: 'search string here'
-```
-
-An example functional file would be:
-```
-magi:
+defaults:
   download folder: d:/Downloads
-  last episode downloaded: 0
+  episode download limit per execution: 1
+  preferred bot: Ginpachi-Sensei
   search engine: horriblesubs
-  search string: '[HorribleSubs] Magi - {:02} [1080p]'
 ```
 
-The `last episode downloaded` field will be updated automatically each time
-the application is run.
+- The `download folder` parameter configures the default download location for episodes.
+- The `episode download limit per execution` parameter configures how many episodes per series can be downloaded on each program execution.
+- The `preferred bot` parameter configures which is the preferred bot to download from.
+- The `search engine` parameter configures what is the default search engine to use for searching episodes. The following search engines are supported:
+  `horriblesubs`, `ixirc`, and `nibl`.
 
-The `search engine` field should contain one of the following options:
-- horriblesubs
-- ixirc
-- nibl
+Any of this parameters can be overriden in the specific series section.
+
+## Series section
+
+The series section should contain the configuration for each series to be downloaded.
+
+Each series must contain at least one configuration entry: `search string`.
+Additionally a series configuration entry might override any of the parameters from the `defaults` section.
 
 The search string should be as precise as possible, and it should be built
 using Python formatting syntax for insertion of the episode number.
@@ -49,12 +64,22 @@ E.g. the string 'Magi - {}' will search for:
 And the string 'Magi - {:02}' will search for:
 `Magi - 01, Magi - 02, ... Magi - 03.`
 
-There is an additional optional configuration line for each series:
-`preferred bot: bot of choice`
+The following example presents a series section containing one serie:
+```
+series:
+  magi:
+    download folder: d:/Downloads
+    last episode downloaded: 0
+    search engine: horriblesubs
+    search string: '[HorribleSubs] Magi - {:02} [1080p]'
+```
 
-If preferred bot is not set, the first bot in the search result will be used.
+The `last episode downloaded` field will be updated automatically each time
+the application is run. If this field does not exist, it will be created
+automatically by the program, starting at 0.
 
-# Skipping (download pause) series
+
+### Skipping (download pause) series
 
 If the name of the series starts with "skip-" it will be skipped during the download process.
 This feature can be used to pause downloading of a series without removing it from the YAML file.
@@ -66,4 +91,22 @@ skip-magi:
   last episode downloaded: 0
   search engine: horriblesubs
   search string: '[HorribleSubs] Magi - {:02} [1080p]'
+```
+
+## Full configuration file example
+
+The example below presents a fully functional configuration file:
+
+```
+defaults:
+  download folder: d:/Downloads
+  episode download limit per execution: 3
+  preferred bot: Ginpachi-Sensei
+  search engine: horriblesubs
+series:
+  magi:
+    download folder: d:/Downloads
+    last episode downloaded: 0
+    search engine: horriblesubs
+    search string: '[HorribleSubs] Magi - {:02} [1080p]'
 ```
