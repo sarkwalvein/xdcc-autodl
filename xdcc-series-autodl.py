@@ -110,8 +110,8 @@ for series in series_dict.keys():
             print("Creating folder " + download_folder)
             os.mkdir(download_folder)
             
-        if 'last episode downloaded' is not in data:
-            data[''last episode downloaded'] = 0
+        if not 'last episode downloaded' in data:
+            data['last episode downloaded'] = 0
             
         while episode_download_count < episode_limit:
             current_search_string_with_wildcard = data['search string'].format(data['last episode downloaded'] + 1)
