@@ -5,14 +5,13 @@ This software downloads new episode from the series described in the configurati
 # Execution
 
 ```
-usage: xdcc-series-autodl.py [-h] [-v VERBOSE] [-s SERIES]
+usage: xdcc-series-autodl.py [-h] [-v] [-s SERIES]
 
 XDCC Series Autodownloader
 
 optional arguments:
   -h, --help            show this help message and exit
-  -v VERBOSE, --verbose VERBOSE
-                        Output additional process details
+  -v, --verbose         Output additional process details
   -s SERIES, --series SERIES
                         YAML file with series configuration
 ```
